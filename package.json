@@ -1,0 +1,305 @@
+{
+  "name": "tabai",
+  "displayName": "TabAI",
+  "description": "AI inline completion and AI commit messages for VS Code. Works with any OpenAI-compatible server (LM Studio, Ollama, vLLM).",
+  "version": "0.1.0",
+  "publisher": "vuuvv",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Programming Languages",
+    "SCM Providers",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "copilot",
+    "autocomplete",
+    "inline-completion",
+    "code-completion",
+    "fim",
+    "llm",
+    "openai",
+    "lm-studio",
+    "ollama",
+    "commit-message",
+    "git"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tabai.triggerCompletion",
+        "title": "TabAI: Trigger Completion",
+        "category": "TabAI"
+      },
+      {
+        "command": "tabai.toggleCompletion",
+        "title": "TabAI: Toggle Completion",
+        "category": "TabAI"
+      },
+      {
+        "command": "tabai.clearCache",
+        "title": "TabAI: Clear Completion Cache",
+        "category": "TabAI"
+      },
+      {
+        "command": "tabai.generateCommitMessage",
+        "title": "TabAI: Generate Commit Message",
+        "category": "TabAI",
+        "icon": "$(sparkle)",
+        "enablement": "!scmProvider || scmProvider == git"
+      },
+      {
+        "command": "tabai.generateCommitMessageAndCommit",
+        "title": "TabAI: Generate Commit Message and Commit",
+        "category": "TabAI"
+      },
+      {
+        "command": "tabai.showStatus",
+        "title": "TabAI: Show Provider Status",
+        "category": "TabAI"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "tabai.triggerCompletion",
+        "key": "ctrl+alt+\\",
+        "mac": "cmd+alt+\\",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "TabAI",
+      "properties": {
+        "tabai.provider.type": {
+          "type": "string",
+          "enum": [
+            "openai-compatible",
+            "fim"
+          ],
+          "enumDescriptions": [
+            "Chat completions endpoint. Works with LM Studio, Ollama, vLLM, OpenAI.",
+            "Raw text completions endpoint using FIM tokens. Fastest and lowest latency."
+          ],
+          "default": "fim",
+          "description": "Which API shape to use for inline completion."
+        },
+        "tabai.provider.baseUrl": {
+          "type": "string",
+          "default": "http://192.168.2.101:1234/v1",
+          "description": "Base URL of the OpenAI-compatible endpoint (without trailing slash)."
+        },
+        "tabai.provider.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Optional bearer token. Leave empty for local servers."
+        },
+        "tabai.provider.completionModel": {
+          "type": "string",
+          "default": "qwen3.6-35b-a3b",
+          "description": "Model used for inline completion."
+        },
+        "tabai.provider.commitModel": {
+          "type": "string",
+          "default": "qwen3.6-35b-a3b",
+          "description": "Model used for commit message generation."
+        },
+        "tabai.provider.timeoutMs": {
+          "type": "number",
+          "default": 20000,
+          "minimum": 1000,
+          "description": "Per-request HTTP timeout in milliseconds."
+        },
+        "tabai.provider.maxRetries": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Retry count for transient network failures."
+        },
+        "tabai.completion.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Master switch for inline completion."
+        },
+        "tabai.completion.debounceMs": {
+          "type": "number",
+          "default": 75,
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Total debounce before a completion request is issued."
+        },
+        "tabai.completion.contextDebounceMs": {
+          "type": "number",
+          "default": 25,
+          "minimum": 0,
+          "maximum": 500,
+          "description": "First debounce phase; context collection starts afterwards."
+        },
+        "tabai.completion.maxPrefixLines": {
+          "type": "number",
+          "default": 120,
+          "minimum": 1,
+          "description": "Maximum number of lines of prefix sent to the model."
+        },
+        "tabai.completion.maxSuffixLines": {
+          "type": "number",
+          "default": 20,
+          "minimum": 0,
+          "description": "Maximum number of lines of suffix sent to the model."
+        },
+        "tabai.completion.maxTokens": {
+          "type": "number",
+          "default": 128,
+          "minimum": 1,
+          "description": "Maximum tokens generated per completion."
+        },
+        "tabai.completion.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Sampling temperature for completion."
+        },
+        "tabai.completion.multiline": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow multi-line completions."
+        },
+        "tabai.completion.cacheSize": {
+          "type": "number",
+          "default": 100,
+          "minimum": 0,
+          "description": "LRU cache entries for completion results."
+        },
+        "tabai.completion.cacheTtlMs": {
+          "type": "number",
+          "default": 60000,
+          "minimum": 0,
+          "description": "Cache entry time-to-live in milliseconds."
+        },
+        "tabai.git.maxDiffChars": {
+          "type": "number",
+          "default": 12000,
+          "minimum": 500,
+          "description": "Maximum characters of diff sent when generating a commit message."
+        },
+        "tabai.git.conventionalCommits": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask the model for a Conventional Commits style subject line."
+        },
+        "tabai.git.language": {
+          "type": "string",
+          "enum": [
+            "en",
+            "zh-CN"
+          ],
+          "default": "en",
+          "description": "Language of the generated commit message."
+        },
+        "tabai.git.autoCommit": {
+          "type": "boolean",
+          "default": false,
+          "description": "When running the generate-and-commit command, commit without confirmation."
+        },
+        "tabai.completion.reasoningMode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "default"
+          ],
+          "enumDescriptions": [
+            "Disable the model's thinking trace. The right switch is picked per model family (Qwen, DeepSeek, GLM, Claude, Gemini, o-series) and retried if the server ignores it.",
+            "Leave the server's default. Expect slower completions and a smaller effective token budget on reasoning models."
+          ],
+          "default": "auto",
+          "description": "How to handle reasoning (\"thinking\") models. Thinking is disabled by default because it consumes the completion token budget."
+        },
+        "tabai.logLevel": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error",
+            "none"
+          ],
+          "enumDescriptions": [
+            "Log every request, its timing and the reason a completion was skipped or rejected. Use this when completions do not appear.",
+            "Log lifecycle events and failures. Default.",
+            "Log warnings and errors only.",
+            "Log errors only.",
+            "Silence the TabAI output channel."
+          ],
+          "default": "info",
+          "description": "Verbosity of the TabAI output channel (View → Output → TabAI)."
+        },
+        "tabai.completion.crossFileContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan other files in the workspace for similar code and include the best matches in the prompt, so completions follow the project's existing conventions."
+        }
+      }
+    },
+    "menus": {
+      "scm/inputBox": [
+        {
+          "command": "tabai.generateCommitMessage",
+          "when": "scmProvider == git"
+        },
+        {
+          "command": "-github.copilot.git.generateCommitMessage",
+          "when": "scmProvider == git"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "tabai.generateCommitMessage",
+          "when": "scmProvider == git",
+          "group": "navigation@10"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "build:prod": "node esbuild.js --production",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest",
+    "package": "npm run build:prod && vsce package --no-dependencies",
+    "build:e2e": "tsc --outDir dist-src --module node16 --moduleResolution node16 --target ES2022 --skipLibCheck --noEmitOnError false src/ai/client.ts src/core/types.ts src/core/logger.ts src/core/debounce.ts src/config/settings.ts src/ai/prompts.ts src/ai/httpClient.ts src/ai/parsers.ts src/ai/reasoning.ts",
+    "test:e2e": "npm run build:e2e && node test/fixtures/e2e.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  },
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vuuvv/tabai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vuuvv/tabai/issues"
+  },
+  "homepage": "https://github.com/vuuvv/tabai#readme"
+}

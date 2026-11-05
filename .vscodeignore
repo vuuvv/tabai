@@ -1,0 +1,17 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+coverage/**
+out/**
+dist-src/**
+node_modules/**
+demo/**
+CHANGELOG.md
+esbuild.js
+vitest.config.ts
+tsconfig.json
+package-lock.json
+**/*.map
+**/*.ts
+**/.DS_Store

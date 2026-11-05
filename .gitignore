@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+dist-src/
+
+# Test and coverage artifacts
+coverage/
+.vitest-cache/
+
+# Packaged extension
+*.vsix
+
+# Editor and OS noise
+.DS_Store
+*.swp
+*.swo
+.idea/
+*.iml
+
+# Logs and local scratch files
+*.log
+npm-debug.log*
